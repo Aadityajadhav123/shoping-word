@@ -29,7 +29,7 @@ function AuthRegister() {
       } else {
         toast({
           title: data?.payload?.message,
-          variant: "destructive",
+          variant: "",
         });
       }
     });

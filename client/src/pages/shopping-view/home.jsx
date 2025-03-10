@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import bannerOne from "../../assets/banner-1.webp";
 import bannerTwo from "../../assets/banner-2.webp";
 import bannerThree from "../../assets/banner-3.webp";
+
+
 import {
   Airplay,
   BabyIcon,
@@ -57,6 +59,7 @@ function ShoppingHome() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
+  const slides=[bannerOne,bannerTwo,bannerThree]
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -117,7 +120,9 @@ function ShoppingHome() {
   console.log(productList, "productList");
 
   useEffect(() => {
-    dispatch(getFeatureImages());
+    dispatch(getFeatureImages()).then(()=>{
+      console.log(featureImageList);
+    });
   }, [dispatch]);
 
   return (
@@ -126,14 +131,15 @@ function ShoppingHome() {
         {featureImageList && featureImageList.length > 0
           ? featureImageList.map((slide, index) => (
               <img
-                src={slide?.image}
+                src={slide?.image || bannerThree}
                 key={index}
                 className={`${
                   index === currentSlide ? "opacity-100" : "opacity-0"
                 } absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000`}
+                alt={`Slide ${index}`} // Always good to add alt text for accessibility
               />
             ))
-          : null}
+          : <p> No images available</p> }  //
         <Button
           variant="outline"
           size="icon"
