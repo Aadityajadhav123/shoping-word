@@ -35,7 +35,19 @@ app.get("/", (req, res) => {
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: function(origin, callback) {
+      // Allow all vercel deployments + localhost
+      if (
+        !origin ||
+        origin.includes("shoping-word") ||
+        origin.includes("vercel.app") ||
+        origin === "http://localhost:5173"
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
