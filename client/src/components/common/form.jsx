@@ -1,14 +1,15 @@
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 function CommonForm({
   formControls,
@@ -17,14 +18,14 @@ function CommonForm({
   onSubmit,
   buttonText,
   isBtnDisabled,
+  variant = "default",
 }) {
   function renderInputsByComponentType(getControlItem) {
-    let element = null;
     const value = formData[getControlItem.name] || "";
 
     switch (getControlItem.componentType) {
       case "input":
-        element = (
+        return (
           <Input
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
@@ -37,12 +38,12 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            className="h-11 rounded-xl"
           />
         );
 
-        break;
       case "select":
-        element = (
+        return (
           <Select
             onValueChange={(value) =>
               setFormData({
@@ -52,7 +53,7 @@ function CommonForm({
             }
             value={value}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-11 rounded-xl">
               <SelectValue placeholder={getControlItem.label} />
             </SelectTrigger>
             <SelectContent>
@@ -67,9 +68,8 @@ function CommonForm({
           </Select>
         );
 
-        break;
       case "textarea":
-        element = (
+        return (
           <Textarea
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
@@ -81,13 +81,12 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            className="min-h-[120px] resize-none rounded-xl"
           />
         );
 
-        break;
-
       default:
-        element = (
+        return (
           <Input
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
@@ -100,25 +99,32 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            className="h-11 rounded-xl"
           />
         );
-        break;
     }
-
-    return element;
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <div className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="w-full">
+      <div className={cn("flex flex-col gap-5", variant === "compact" ? "gap-4" : "gap-5")}>
         {formControls.map((controlItem) => (
-          <div className="grid w-full gap-1.5" key={controlItem.name}>
-            <Label className="mb-1">{controlItem.label}</Label>
+          <div key={controlItem.name} className="grid gap-2">
+            <Label htmlFor={controlItem.name} className="text-sm font-medium text-gray-700">
+              {controlItem.label}
+            </Label>
             {renderInputsByComponentType(controlItem)}
           </div>
         ))}
       </div>
-      <Button disabled={isBtnDisabled} type="submit" className="mt-2 w-full">
+      <Button
+        disabled={isBtnDisabled}
+        type="submit"
+        className={cn(
+          "mt-6 w-full h-11 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200",
+          variant === "compact" && "mt-4"
+        )}
+      >
         {buttonText || "Submit"}
       </Button>
     </form>

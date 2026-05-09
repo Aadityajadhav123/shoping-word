@@ -96,7 +96,7 @@ const logoutUser = (req, res) => {
   });
 };
 
-//auth middleware
+// auth middleware for protected routes
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
   if (!token)
@@ -117,4 +117,31 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, authMiddleware };
+// check authentication status (always returns 200)
+const checkAuth = async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(200).json({
+      success: false,
+      message: "Not authenticated",
+      user: null,
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
+    res.status(200).json({
+      success: true,
+      message: "Authenticated user!",
+      user: decoded,
+    });
+  } catch (error) {
+    res.status(200).json({
+      success: false,
+      message: "Invalid token",
+      user: null,
+    });
+  }
+};
+
+module.exports = { registerUser, loginUser, logoutUser, authMiddleware, checkAuth };

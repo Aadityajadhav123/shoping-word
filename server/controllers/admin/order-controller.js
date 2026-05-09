@@ -1,4 +1,4 @@
-const Order = require("../../models/Order");
+const Order = require('../../models/Order'); // Adjust the path if necessary
 
 const getAllOrdersOfAllUsers = async (req, res) => {
   try {
@@ -8,7 +8,7 @@ const getAllOrdersOfAllUsers = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "No orders found!",
-      });
+      });s
     }
 
     res.status(200).json({
@@ -54,6 +54,8 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { orderStatus } = req.body;
+
+    console.log(req.body, "Request Body");
 
     const order = await Order.findById(id);
 

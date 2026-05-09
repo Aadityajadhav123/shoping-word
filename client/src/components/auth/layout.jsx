@@ -2,15 +2,21 @@ import { Outlet } from "react-router-dom";
 
 function AuthLayout() {
   return (
-    <div className="flex min-h-screen w-full">
-      <div className="hidden lg:flex items-center justify-center bg-black w-1/2 px-12">
-        <div className="max-w-md space-y-6 text-center text-primary-foreground">
-          <h1 className="text-4xl font-extrabold tracking-tight">
-            Welcome to ECommerce Shopping
-          </h1>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+      {/* Header - Logo only */}
+      <div className="w-full p-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span className="text-2xl font-bold text-white">ShopFast</span>
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+
+      {/* Main Content - Centered */}
+      <div className="flex-1 flex items-center justify-center p-6">
         <Outlet />
       </div>
     </div>

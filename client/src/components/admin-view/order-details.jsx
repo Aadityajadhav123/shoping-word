@@ -1,6 +1,6 @@
 import { useState } from "react";
 import CommonForm from "../common/form";
-import { DialogContent } from "../ui/dialog";
+import { DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
@@ -22,7 +22,6 @@ function AdminOrderDetailsView({ orderDetails }) {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  console.log(orderDetails, "orderDetailsorderDetails");
 
   function handleUpdateStatus(event) {
     event.preventDefault();
@@ -42,9 +41,10 @@ function AdminOrderDetailsView({ orderDetails }) {
     });
   }
 
-  return (
-    <DialogContent className="sm:max-w-[600px]">
-      <div className="grid gap-6">
+    return (
+    <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+      <DialogTitle className="sr-only">Order Details</DialogTitle>
+        <div className="grid gap-6 p-4">
         <div className="grid gap-2">
           <div className="flex mt-6 items-center justify-between">
             <p className="font-medium">Order ID</p>
@@ -90,7 +90,7 @@ function AdminOrderDetailsView({ orderDetails }) {
             <ul className="grid gap-3">
               {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
                 ? orderDetails?.cartItems.map((item) => (
-                    <li className="flex items-center justify-between">
+                    <li key={item._id || item.productId} className="flex items-center justify-between">
                       <span>Title: {item.title}</span>
                       <span>Quantity: {item.quantity}</span>
                       <span>Price: ${item.price}</span>

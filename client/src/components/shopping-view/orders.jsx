@@ -17,6 +17,7 @@ import {
   getOrderDetails,
   resetOrderDetails,
 } from "@/store/shop/order-slice";
+import { CheckCircle, Package, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "../ui/badge";
 
 function ShoppingOrders() {
@@ -24,8 +25,41 @@ function ShoppingOrders() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { orderList, orderDetails } = useSelector((state) => state.shopOrder);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'shipped':
+        return <Package className="w-4 h-4" />;
+      case 'delivered':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'cancelled':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500';
+      case 'shipped':
+        return 'bg-blue-500';
+      case 'delivered':
+        return 'bg-green-600';
+      case 'cancelled':
+        return 'bg-red-600';
+      case 'pending':
+      default:
+        return 'bg-black';
+    }
+  };
 
   function handleFetchOrderDetails(getId) {
+    setSelectedOrderId(getId);
     dispatch(getOrderDetails(getId));
   }
 
@@ -37,7 +71,11 @@ function ShoppingOrders() {
     if (orderDetails !== null) setOpenDetailsDialog(true);
   }, [orderDetails]);
 
-  console.log(orderDetails, "orderDetails");
+  function handleDialogClose() {
+    setOpenDetailsDialog(false);
+    setSelectedOrderId(null);
+    dispatch(resetOrderDetails());
+  }
 
   return (
     <Card>
@@ -60,30 +98,22 @@ function ShoppingOrders() {
           <TableBody>
             {orderList && orderList.length > 0
               ? orderList.map((orderItem) => (
-                  <TableRow>
+                  <TableRow key={orderItem._id}>
                     <TableCell>{orderItem?._id}</TableCell>
                     <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`py-1 px-3 ${
-                          orderItem?.orderStatus === "confirmed"
-                            ? "bg-green-500"
-                            : orderItem?.orderStatus === "rejected"
-                            ? "bg-red-600"
-                            : "bg-black"
-                        }`}
-                      >
-                        {orderItem?.orderStatus}
-                      </Badge>
-                    </TableCell>
+                     <TableCell>
+                       <Badge
+                         className={`py-1 px-3 flex items-center gap-2 ${getStatusColor(orderItem?.orderStatus)}`}
+                       >
+                         {getStatusIcon(orderItem?.orderStatus)}
+                         {orderItem?.orderStatus}
+                       </Badge>
+                     </TableCell>
                     <TableCell>${orderItem?.totalAmount}</TableCell>
                     <TableCell>
                       <Dialog
                         open={openDetailsDialog}
-                        onOpenChange={() => {
-                          setOpenDetailsDialog(false);
-                          dispatch(resetOrderDetails());
-                        }}
+                        onOpenChange={handleDialogClose}
                       >
                         <Button
                           onClick={() =>
@@ -92,7 +122,9 @@ function ShoppingOrders() {
                         >
                           View Details
                         </Button>
-                        <ShoppingOrderDetailsView orderDetails={orderDetails} />
+                        {selectedOrderId === orderItem?._id && (
+                          <ShoppingOrderDetailsView orderDetails={orderDetails} />
+                        )}
                       </Dialog>
                     </TableCell>
                   </TableRow>

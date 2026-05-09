@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Dialog, DialogTitle } from "../ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -9,29 +9,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import AdminOrderDetailsView from "./order-details";
+} from "@/components/ui/table";
+import UserOrderDetailsView from "@/components/shopping-view/order-details";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getAllOrdersForAdmin,
-  getOrderDetailsForAdmin,
+  getAllOrdersByUserId,
+  getOrderDetails,
   resetOrderDetails,
-} from "@/store/admin/order-slice";
-import { Badge } from "../ui/badge";
+} from "@/store/shop/order-slice";
+import { Badge } from "@/components/ui/badge";
 
-function AdminOrdersView() {
+function UserOrdersView() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { orderList, orderDetails } = useSelector((state) => state.adminOrder);
+  const { orderList, orderDetails } = useSelector((state) => state.shopOrder);
 
   function handleFetchOrderDetails(getId) {
-    dispatch(getOrderDetailsForAdmin(getId));
+    dispatch(getOrderDetails(getId));
   }
 
   useEffect(() => {
-    dispatch(getAllOrdersForAdmin());
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(getAllOrdersByUserId(user.id));
+    }
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (orderDetails !== null) setOpenDetailsDialog(true);
@@ -40,7 +42,7 @@ function AdminOrdersView() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>All Orders</CardTitle>
+        <CardTitle>My Orders</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -58,7 +60,7 @@ function AdminOrdersView() {
           <TableBody>
             {orderList && orderList.length > 0
               ? orderList.map((orderItem) => (
-                  <TableRow key={orderItem?._id}>
+                    <TableRow key={orderItem?._id}>
                     <TableCell>{orderItem?._id}</TableCell>
                     <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
                     <TableCell>
@@ -91,6 +93,27 @@ function AdminOrdersView() {
                         >
                           View Details
                         </Button>
+                        <UserOrderDetailsView orderDetails={orderDetails} />
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                    <TableCell>${orderItem?.totalAmount}</TableCell>
+                    <TableCell>
+                      <Dialog
+                        open={openDetailsDialog}
+                        onOpenChange={() => {
+                          setOpenDetailsDialog(false);
+                          dispatch(resetOrderDetails());
+                        }}
+                      >
+                        <DialogTitle className="sr-only">Order Details</DialogTitle>
+                        <Button
+                          onClick={() =>
+                            handleFetchOrderDetails(orderItem?._id)
+                          }
+                        >
+                          View Details
+                        </Button>
                         <AdminOrderDetailsView orderDetails={orderDetails} />
                       </Dialog>
                     </TableCell>
@@ -104,4 +127,4 @@ function AdminOrdersView() {
   );
 }
 
-export default AdminOrdersView;
+export default UserOrdersView;

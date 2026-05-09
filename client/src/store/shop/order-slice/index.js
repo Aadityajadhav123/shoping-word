@@ -13,7 +13,7 @@ export const createNewOrder = createAsyncThunk(
   "/order/createNewOrder",
   async (orderData) => {
     const response = await axios.post(
-       `${import.meta.env.VITE_API_URL}/api/shop/order/create`,
+      `${import.meta.env.VITE_API_URL}/api/shop/order/create`,
       orderData
     );
 
@@ -41,7 +41,7 @@ export const getAllOrdersByUserId = createAsyncThunk(
   "/order/getAllOrdersByUserId",
   async (userId) => {
     const response = await axios.get(
-       `${import.meta.env.VITE_API_URL}/api/shop/order/list/${userId}`
+       `${import.meta.env.VITE_API_URL}/api/shop/orders/list/${userId}`
     );
 
     return response.data;

@@ -20,72 +20,111 @@ const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
-    const create_payment_json = {
-      intent: "sale",
-      payer: {
-        payment_method: "paypal",
-      },
-      redirect_urls: {
-        return_url: `${process.env.CLIENT_URL}/shop/paypal-return`,
-        cancel_url: `${process.env.CLIENT_URL}/shop/paypal-cancel`,
-      },
-      transactions: [
-        {
-          item_list: {
-            items: cartItems.map((item) => ({
-              name: item.title,
-              sku: item.productId,
-              price: item.price.toFixed(2),
-              currency: "USD",
-              quantity: item.quantity,
-            })),
-          },
-          amount: {
-            currency: "USD",
-            total: totalAmount.toFixed(2),
-          },
-          description: "description",
+    if (paymentMethod === "paypal") {
+      const create_payment_json = {
+        intent: "sale",
+        payer: {
+          payment_method: "paypal",
         },
-      ],
-    };
+        redirect_urls: {
+          return_url: `${process.env.CLIENT_URL}/shop/paypal-return`,
+          cancel_url: `${process.env.CLIENT_URL}/shop/paypal-cancel`,
+        },
+        transactions: [
+          {
+            item_list: {
+              items: cartItems.map((item) => ({
+                name: item.title,
+                sku: item.productId,
+                price: item.price.toFixed(2),
+                currency: "USD",
+                quantity: item.quantity,
+              })),
+            },
+            amount: {
+              currency: "USD",
+              total: totalAmount.toFixed(2),
+            },
+            description: "description",
+          },
+        ],
+      };
 
-    paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
-      if (error) {
-        console.log(error);
+      paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
+        if (error) {
+          console.log(error);
 
-        return res.status(500).json({
-          success: false,
-          message: "Error while creating paypal payment",
-        });
-      } else {
-        const newlyCreatedOrder = new Order({
-          userId,
-          cartId,
-          cartItems,
-          addressInfo,
-          orderStatus,
-          paymentMethod,
-          paymentStatus,
-          totalAmount,
-          orderDate,
-          orderUpdateDate,
-          paymentId,
-          payerId,
-        });
+          return res.status(500).json({
+            success: false,
+            message: "Error while creating paypal payment",
+          });
+        } else {
+          const newlyCreatedOrder = new Order({
+            userId,
+            cartId,
+            cartItems,
+            addressInfo,
+            orderStatus,
+            paymentMethod,
+            paymentStatus,
+            totalAmount,
+            orderDate,
+            orderUpdateDate,
+            paymentId,
+            payerId,
+          });
 
-        await newlyCreatedOrder.save();
+          await newlyCreatedOrder.save();
 
-        const approvalURL = paymentInfo.links.find(
-          (link) => link.rel === "approval_url"
-        ).href;
+          const approvalLink = paymentInfo.links.find(
+            (link) => link.rel === "approval_url"
+          );
 
-        res.status(201).json({
-          success: true,
-          approvalURL,
-          orderId: newlyCreatedOrder._id,
-        });
-      }
-    });
+          if (!approvalLink) {
+            return res.status(500).json({
+              success: false,
+              message: "Failed to get approval URL from PayPal",
+            });
+          }
+
+          const approvalURL = approvalLink.href;
+
+          res.status(201).json({
+            success: true,
+            approvalURL,
+            orderId: newlyCreatedOrder._id,
+          });
+        }
+      });
+    } else if (paymentMethod === "cash-on-delivery") {
+      const newlyCreatedOrder = new Order({
+        userId,
+        cartId,
+        cartItems,
+        addressInfo,
+        orderStatus,
+        paymentMethod,
+        paymentStatus,
+        totalAmount,
+        orderDate,
+        orderUpdateDate,
+        paymentId: "",
+        payerId: "",
+      });
+
+      await newlyCreatedOrder.save();
+
+      res.status(201).json({
+        success: true,
+        approvalURL: `${process.env.CLIENT_URL}/shop/payment-success`,
+        orderId: newlyCreatedOrder._id,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment method",
+      });
+    }
   } catch (e) {
     console.log(e);
     res.status(500).json({
@@ -119,7 +158,7 @@ const capturePayment = async (req, res) => {
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: `Not enough stock for this product ${product.title}`,
+          message: `Product not found for item`,
         });
       }
 

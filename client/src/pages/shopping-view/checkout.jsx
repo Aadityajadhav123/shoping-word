@@ -5,7 +5,7 @@ import UserCartItemsContent from "@/components/shopping-view/cart-items-content"
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { createNewOrder } from "@/store/shop/order-slice";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 function ShoppingCheckout() {
@@ -14,10 +14,11 @@ function ShoppingCheckout() {
   const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymemntStart] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('paypal');
   const dispatch = useDispatch();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  console.log(currentSelectedAddress, "cartItems");
 
   const totalCartAmount =
     cartItems && cartItems.items && cartItems.items.length > 0
@@ -72,8 +73,8 @@ function ShoppingCheckout() {
         notes: currentSelectedAddress?.notes,
       },
       orderStatus: "pending",
-      paymentMethod: "paypal",
-      paymentStatus: "pending",
+      paymentMethod: selectedPaymentMethod,
+      paymentStatus: selectedPaymentMethod === 'cash-on-delivery' ? 'pending' : 'pending',
       totalAmount: totalCartAmount,
       orderDate: new Date(),
       orderUpdateDate: new Date(),
@@ -81,14 +82,27 @@ function ShoppingCheckout() {
       payerId: "",
     };
 
-    dispatch(createNewOrder(orderData)).then((data) => {
-      console.log(data, "sangam");
-      if (data?.payload?.success) {
-        setIsPaymemntStart(true);
-      } else {
-        setIsPaymemntStart(false);
-      }
-    });
+    if (selectedPaymentMethod === 'paypal') {
+      dispatch(createNewOrder(orderData)).then((data) => {
+        console.log(data, "sangam");
+        if (data?.payload?.success) {
+          setIsPaymemntStart(true);
+        } else {
+          setIsPaymemntStart(false);
+        }
+      });
+    } else {
+      dispatch(createNewOrder(orderData)).then((data) => {
+        if (data?.payload?.success) {
+          navigate('/shop/payment-success');
+        } else {
+          toast({
+            title: "Order placement failed",
+            variant: "destructive",
+          });
+        }
+      });
+    }
   }
 
   if (approvalURL) {
@@ -120,9 +134,22 @@ function ShoppingCheckout() {
           <div className="mt-4 w-full">
             <Button onClick={handleInitiatePaypalPayment} className="w-full">
               {isPaymentStart
-                ? "Processing Paypal Payment..."
-                : "Checkout with Paypal"}
+                ? selectedPaymentMethod === 'paypal'
+                  ? "Processing PayPal Payment..."
+                  : "Placing Order..."
+                : selectedPaymentMethod === 'paypal'
+                  ? "Checkout with PayPal"
+                  : "Place Order with Cash on Delivery"}
             </Button>
+            <div className="mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedPaymentMethod('cash-on-delivery')}
+                className={`w-full justify-start ${selectedPaymentMethod === 'cash-on-delivery' ? 'border-indigo-600 bg-indigo-50' : ''}`}
+              >
+                {selectedPaymentMethod === 'cash-on-delivery' ? '✓ ' : ''}Cash on Delivery
+              </Button>
+            </div>
           </div>
         </div>
       </div>
